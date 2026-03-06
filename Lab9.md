@@ -1,4 +1,4 @@
-# ArgoCD — Lab 7: Deploy a Helm Chart via CLI
+# ArgoCD — Lab 9: Deploy a Helm Chart via CLI
 **Kind Cluster | kubectl | GitHub | GitOps**  
 *End-to-End Setup & Application Deployment*  
 *February 2026*
