@@ -12,8 +12,8 @@
    - [1.2 Generate a Personal Access Token (PAT)](#12-generate-a-personal-access-token-pat)
 2. [Register GitHub Repo in ArgoCD](#2-register-github-repo-in-argocd)
 3. [Create an ArgoCD Project](#3-create-an-argocd-project)
-   - [6.1 Via the ArgoCD UI](#61-via-the-argocd-ui)
-   - [6.2 Via CLI (Alternative)](#62-via-cli-alternative)
+   - [ Via the ArgoCD UI](#61-via-the-argocd-ui)
+   - [ Via CLI (Alternative)](#62-via-cli-alternative)
 
 ---
 
