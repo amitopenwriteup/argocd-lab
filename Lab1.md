@@ -101,10 +101,6 @@ nodes:
   image: kindest/node:v1.30.0
 - role: worker
   image: kindest/node:v1.30.0
-- role: worker
-  image: kindest/node:v1.30.0
-- role: worker
-  image: kindest/node:v1.30.0
 ```
 
 Save the file, then run:
