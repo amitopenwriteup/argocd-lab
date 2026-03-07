@@ -1,293 +1,39 @@
-# ArgoCD Lab 12 — Resource Hooks
+# ArgoCD Hooks — Application Deployment Guide
 
-> **Topic:** Sync lifecycle hooks | **Annotation:** `argocd.argoproj.io/hook` | **Use Cases:** DB migrations, smoke tests, Slack notifications
+> **App:** `argocdhooks` | **Namespace:** `default` | **Cluster:** `https://kubernetes.default.svc` | **Repo:** `github.com/amitopenwriteup/argocdhooks`
 
 ---
 
 ## 1. Overview
 
-Resource Hooks allow you to run custom logic at specific **phases of an ArgoCD sync operation**. They are standard Kubernetes manifests (typically `Job` or `Pod`) annotated with `argocd.argoproj.io/hook` to tell ArgoCD when to execute them.
+This ArgoCD `Application` deploys Kubernetes manifests from the `argocdhooks` repository to an in-cluster destination. The repository contains a single `manifest.yaml` at the root (`path: .`) that includes **resource hooks** — annotated Kubernetes Jobs that run at specific phases of the ArgoCD sync lifecycle.
 
-**Common use cases:**
-- Run database schema migrations before deploying new app versions (`PreSync`)
-- Execute smoke/integration tests after deployment completes (`PostSync`)
-- Send Slack or webhook notifications on success or failure (`PostSync` / `SyncFail`)
-- Seed configuration data or run one-time setup tasks
+**What this configuration does:**
 
----
-
-## 2. Sync Phases & Hook Types
-
-ArgoCD defines five hook phases that map to the sync lifecycle:
-
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   PreSync    │────▶│     Sync     │────▶│   PostSync   │────▶│    Skip      │
-│              │     │  (manifests) │     │              │     │  (no apply)  │
-└──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘
-                                                                 ┌──────────────┐
-                                                   on failure ──▶│  SyncFail    │
-                                                                 └──────────────┘
-```
-
-| Hook Type | Runs When | Typical Use |
-|---|---|---|
-| `PreSync` | Before any manifests are applied | DB migrations, pre-flight checks |
-| `Sync` | At the same time as manifests are applied | Parallel setup tasks |
-| `PostSync` | After all resources are Healthy | Integration tests, notifications |
-| `SyncFail` | When the sync operation fails | Alert on failure, rollback triggers |
-| `Skip` | Never applied | Exclude a resource from sync |
+- Watches the `main` branch of the `argocdhooks` GitHub repository
+- Automatically syncs any changes with `prune` and `selfHeal` enabled
+- Executes hook Jobs in defined sync phases (PreSync, PostSync, SyncFail)
+- Deploys all resources into the `default` namespace of the in-cluster Kubernetes API
 
 ---
 
-## 3. Basic Hook Structure
-
-Any Kubernetes resource can be a hook — add the annotation to activate it:
-
-```yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: schema-migrate
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-spec:
-  template:
-    spec:
-      containers:
-        - name: migrate
-          image: my-app:latest
-          command: ["./migrate.sh"]
-      restartPolicy: Never
-  backoffLimit: 0
-```
-
-> Multiple hooks can be specified as a comma-separated list:
-> `argocd.argoproj.io/hook: PreSync,Sync`
-
----
-
-## 4. Hook Manifests
-
-### 4.1 PreSync — Database Migration
-
-Runs **before** application manifests are applied. ArgoCD waits for this Job to succeed before proceeding.
-
-```yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  generateName: schema-migrate-
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-spec:
-  template:
-    spec:
-      containers:
-        - name: db-migrate
-          image: bitnami/postgresql:15
-          command:
-            - "/bin/sh"
-            - "-c"
-            - "psql $DATABASE_URL -f /migrations/schema.sql"
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: db-secret
-                  key: url
-      restartPolicy: Never
-  backoffLimit: 2
-```
-
-### 4.2 PostSync — Smoke Test
-
-Runs **after** all resources are synced and healthy.
-
-```yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  generateName: smoke-test-
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-spec:
-  template:
-    spec:
-      containers:
-        - name: smoke-test
-          image: curlimages/curl:latest
-          command:
-            - "sh"
-            - "-c"
-            - |
-              curl -sf http://my-app-service/healthz || exit 1
-              echo "Smoke test passed"
-      restartPolicy: Never
-  backoffLimit: 1
-```
-
-### 4.3 PostSync — Slack Success Notification
-
-Send a Slack message when sync completes successfully.
-
-```yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  generateName: notify-success-
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-spec:
-  template:
-    spec:
-      containers:
-        - name: slack-notify
-          image: curlimages/curl:latest
-          command:
-            - "curl"
-            - "-X"
-            - "POST"
-            - "--data-urlencode"
-            - >
-              payload={"channel": "#deployments", "username": "ArgoCD",
-              "text": ":white_check_mark: App sync succeeded!", "icon_emoji": ":rocket:"}
-            - "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
-      restartPolicy: Never
-  backoffLimit: 2
-```
-
-### 4.4 SyncFail — Slack Failure Notification
-
-Runs **only when the sync fails** — ideal for alerting on broken deployments.
-
-```yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  generateName: notify-failure-
-  annotations:
-    argocd.argoproj.io/hook: SyncFail
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-spec:
-  template:
-    spec:
-      containers:
-        - name: slack-notify
-          image: curlimages/curl:latest
-          command:
-            - "curl"
-            - "-X"
-            - "POST"
-            - "--data-urlencode"
-            - >
-              payload={"channel": "#deployments", "username": "ArgoCD",
-              "text": ":x: App sync FAILED! Check ArgoCD immediately.", "icon_emoji": ":fire:"}
-            - "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
-      restartPolicy: Never
-  backoffLimit: 2
-```
-
----
-
-## 5. Hook Delete Policies
-
-By default, hook resources remain in the cluster after execution. Use delete policies to clean them up automatically:
-
-```yaml
-annotations:
-  argocd.argoproj.io/hook: PostSync
-  argocd.argoproj.io/hook-delete-policy: HookSucceeded
-```
-
-| Policy | Behaviour |
-|---|---|
-| `HookSucceeded` | Deletes the hook resource after it completes **successfully** |
-| `HookFailed` | Deletes the hook resource after it **fails** |
-| `BeforeHookCreation` | Deletes any existing hook resource **before** creating the new one (default for named resources) |
-
-> **Tip:** Combine `HookSucceeded` and `HookFailed` to always clean up:
-> ```yaml
-> argocd.argoproj.io/hook-delete-policy: HookSucceeded,HookFailed
-> ```
-
-### Alternative: TTL-based Cleanup
-
-Jobs and Argo Workflows natively support `ttlSecondsAfterFinished` — no delete policy annotation needed:
-
-```yaml
-spec:
-  ttlSecondsAfterFinished: 300   # auto-delete 5 minutes after completion
-  template:
-    ...
-```
-
----
-
-## 6. Hook Execution Flow
-
-```
-Sync triggered
-      │
-      ▼
-┌─────────────────────────────────────┐
-│  1. PreSync hooks run               │
-│     ArgoCD waits for all to succeed │
-└─────────────────┬───────────────────┘
-                  │ ✓ PreSync healthy
-                  ▼
-┌─────────────────────────────────────┐
-│  2. Sync phase                      │
-│     Manifests applied + Sync hooks  │
-│     ArgoCD waits for healthy state  │
-└─────────────────┬───────────────────┘
-                  │ ✓ All resources healthy
-                  ▼
-┌─────────────────────────────────────┐
-│  3. PostSync hooks run              │
-│     Tests, notifications, cleanup   │
-└─────────────────┬───────────────────┘
-                  │ ✗ Any phase fails
-                  ▼
-┌─────────────────────────────────────┐
-│  SyncFail hooks run (on failure)    │
-│  Alerts, rollback logic             │
-└─────────────────────────────────────┘
-```
-
----
-
-## 7. Repository Structure for Lab 12
-
-```
-Lab12 hooks/
-├── presync-migrate.yaml        # PreSync: DB migration Job
-├── postsync-smoke-test.yaml    # PostSync: health check Job
-├── postsync-notify-success.yaml # PostSync: Slack success alert
-├── syncfail-notify.yaml        # SyncFail: Slack failure alert
-└── app.yaml                    # ArgoCD Application manifest
-```
-
-### ArgoCD Application Manifest
+## 2. ArgoCD Application Manifest
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: hooks-demo
+  name: argocdhooks
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: https://github.com/amitopenwriteup/argocd-docs-labs.git
+    repoURL: https://github.com/amitopenwriteup/argocdhooks.git
     targetRevision: HEAD
-    path: Lab12 hooks
+    path: .
   destination:
     server: https://kubernetes.default.svc
-    namespace: hooks-demo
+    namespace: default
   syncPolicy:
     automated:
       prune: true
@@ -298,95 +44,289 @@ spec:
 
 ---
 
-## 8. `generateName` vs `name`
+## 3. Field Reference
 
-| Field | Behaviour | Use With |
+| Field | Value | Description |
 |---|---|---|
-| `generateName: schema-migrate-` | Creates unique name each sync: `schema-migrate-x7k2p` | `HookSucceeded` delete policy |
-| `name: schema-migrate` | Fixed name — conflicts on second sync unless cleaned up | `BeforeHookCreation` delete policy |
-
-> Use `generateName` when you want a fresh Job every sync. Use `name` + `BeforeHookCreation` when you want to inspect the last run's logs.
-
----
-
-## 9. Applying and Verifying
-
-### Apply the Application
-
-```bash
-kubectl apply -f app.yaml -n argocd
-```
-
-### Trigger a Sync
-
-```bash
-argocd app sync hooks-demo
-```
-
-### Watch Hook Execution
-
-```bash
-# Watch all Jobs in the namespace
-kubectl get jobs -n hooks-demo -w
-
-# Check PreSync Job logs
-kubectl logs -l argocd.argoproj.io/hook=PreSync -n hooks-demo
-
-# Check PostSync Job logs
-kubectl logs -l job-name=<job-name> -n hooks-demo
-
-# View sync status and hook phases in ArgoCD
-argocd app get hooks-demo
-```
-
-### Check Sync History
-
-```bash
-argocd app history hooks-demo
-```
+| `metadata.name` | `argocdhooks` | ArgoCD Application name |
+| `metadata.namespace` | `argocd` | Must be in the ArgoCD control plane namespace |
+| `spec.project` | `default` | ArgoCD project for RBAC scoping |
+| `source.repoURL` | `https://github.com/amitopenwriteup/argocdhooks.git` | HTTPS GitHub repo — no SSH key required |
+| `source.targetRevision` | `HEAD` | Tracks the latest commit on the default branch |
+| `source.path` | `.` | Root of the repository — all YAML files are applied |
+| `destination.server` | `https://kubernetes.default.svc` | In-cluster Kubernetes API endpoint |
+| `destination.namespace` | `default` | All resources deploy to the `default` namespace |
+| `automated.prune` | `true` | Deletes resources removed from Git |
+| `automated.selfHeal` | `true` | Reverts any manual `kubectl` changes |
+| `CreateNamespace=true` | syncOption | Creates `default` namespace if missing (safe no-op if it exists) |
 
 ---
 
-## 10. Troubleshooting
+## 4. Repository Structure
 
-| Issue | Likely Cause | Fix |
-|---|---|---|
-| Hook Job stuck in `Pending` | Insufficient cluster resources | Check `kubectl describe pod` for scheduling errors |
-| PreSync never completes | Job fails and `backoffLimit` exceeded | Check logs with `kubectl logs <pod>` |
-| PostSync not running | Sync phase resources not Healthy | Inspect app health: `argocd app get <name>` |
-| Hook runs every sync | Missing delete policy | Add `argocd.argoproj.io/hook-delete-policy` |
-| Old hook Job conflicts | Using `name` without `BeforeHookCreation` | Switch to `generateName` or add `BeforeHookCreation` |
-| `SyncFail` hook not triggered | Sync succeeded (no failure) | Intentionally break a manifest to test |
+```
+argocdhooks/
+└── manifest.yaml    ← single file containing all resources + hooks
+```
+
+Since `path: .` points to the repo root, ArgoCD reads **all YAML files** in the directory. The `manifest.yaml` contains a multi-document YAML file with Kubernetes resources and hook-annotated Jobs separated by `---`.
 
 ---
 
-## 11. Hook Annotations Quick Reference
+## 5. What Are ArgoCD Hooks?
+
+Hooks are standard Kubernetes resources (typically `Job`) annotated with `argocd.argoproj.io/hook` to run at specific sync lifecycle phases.
 
 ```yaml
 metadata:
   annotations:
-    # Hook phase
     argocd.argoproj.io/hook: PreSync
-
-    # Delete policy
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
-
-    # Sync wave within a hook phase (optional ordering)
-    argocd.argoproj.io/sync-wave: "1"
 ```
 
-### All Valid Hook Values
+### Sync Lifecycle with Hooks
 
 ```
-PreSync | Sync | PostSync | SyncFail | Skip
-```
-
-### All Valid Delete Policy Values
-
-```
-HookSucceeded | HookFailed | BeforeHookCreation
+Git push / sync triggered
+         │
+         ▼
+  ┌─────────────┐
+  │  PreSync    │  ← Hook Jobs run BEFORE manifests are applied
+  │  (hooks)    │    e.g. DB migration, pre-flight checks
+  └──────┬──────┘
+         │ ✓ success
+         ▼
+  ┌─────────────┐
+  │    Sync     │  ← Regular manifests applied (Deployments, Services...)
+  │ (manifests) │    Sync-phase hooks run in parallel
+  └──────┬──────┘
+         │ ✓ all resources healthy
+         ▼
+  ┌─────────────┐
+  │  PostSync   │  ← Hook Jobs run AFTER everything is healthy
+  │  (hooks)    │    e.g. smoke tests, Slack notifications
+  └──────┬──────┘
+         │ ✗ failure at any phase
+         ▼
+  ┌─────────────┐
+  │  SyncFail   │  ← Runs ONLY on failure
+  │  (hooks)    │    e.g. alert, rollback trigger
+  └─────────────┘
 ```
 
 ---
 
-*Resource hooks enable reliable, ordered deployment workflows — ensuring databases are migrated before pods start, health is verified before traffic is routed, and teams are notified the moment something goes wrong.*
+## 6. Typical `manifest.yaml` Structure
+
+A hooks-based `manifest.yaml` in the root of the repo typically contains multiple YAML documents:
+
+```yaml
+# ── PreSync: runs before manifests are applied ──────────────────────────
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: pre-sync-hook-
+  namespace: default
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      containers:
+        - name: pre-sync
+          image: alpine:3.18
+          command: ["sh", "-c", "echo PreSync hook running && sleep 5"]
+      restartPolicy: Never
+  backoffLimit: 1
+---
+# ── Main Application Resource ────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: my-app
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-svc
+  namespace: default
+spec:
+  selector:
+    app: my-app
+  ports:
+    - port: 80
+      targetPort: 80
+---
+# ── PostSync: runs after all resources are healthy ───────────────────────
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: post-sync-hook-
+  namespace: default
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      containers:
+        - name: post-sync
+          image: curlimages/curl:latest
+          command: ["sh", "-c", "curl -sf http://my-app-svc/healthz && echo PostSync passed"]
+      restartPolicy: Never
+  backoffLimit: 1
+---
+# ── SyncFail: runs only when sync fails ──────────────────────────────────
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: sync-fail-hook-
+  namespace: default
+  annotations:
+    argocd.argoproj.io/hook: SyncFail
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      containers:
+        - name: sync-fail
+          image: alpine:3.18
+          command: ["sh", "-c", "echo SYNC FAILED - sending alert"]
+      restartPolicy: Never
+  backoffLimit: 1
+```
+
+---
+
+## 7. Hook Types Reference
+
+| Hook | Runs When | Common Use |
+|---|---|---|
+| `PreSync` | Before any manifests are applied | DB migrations, pre-flight validation |
+| `Sync` | Alongside manifest apply | Parallel setup tasks |
+| `PostSync` | After all resources are Healthy | Health checks, smoke tests, notifications |
+| `SyncFail` | When sync operation fails | Failure alerts, rollback triggers |
+| `Skip` | Never | Exclude a resource from sync entirely |
+
+---
+
+## 8. Hook Delete Policies
+
+| Policy | Behaviour |
+|---|---|
+| `HookSucceeded` | Auto-deletes Job after successful completion |
+| `HookFailed` | Auto-deletes Job after failure |
+| `BeforeHookCreation` | Deletes previous hook resource before creating a new one |
+
+**Always-cleanup pattern:**
+
+```yaml
+argocd.argoproj.io/hook-delete-policy: HookSucceeded,HookFailed
+```
+
+---
+
+## 9. Deploying the Application
+
+### Apply the Application to ArgoCD
+
+```bash
+kubectl apply -f application.yaml -n argocd
+```
+
+### Trigger a Manual Sync
+
+```bash
+argocd app sync argocdhooks
+```
+
+### Watch Sync Progress
+
+```bash
+# Live sync status
+argocd app get argocdhooks
+
+# Watch hook Jobs execute
+kubectl get jobs -n default -w
+
+# View PreSync hook logs
+kubectl logs -l argocd.argoproj.io/hook=PreSync -n default
+
+# View PostSync hook logs
+kubectl logs -l argocd.argoproj.io/hook=PostSync -n default
+```
+
+### Check Application Health
+
+```bash
+# Full app status
+argocd app get argocdhooks --output wide
+
+# Sync history
+argocd app history argocdhooks
+
+# All resources deployed
+kubectl get all -n default
+```
+
+---
+
+## 10. Sync Policy Behaviour
+
+| Setting | Behaviour |
+|---|---|
+| `automated.prune: true` | If a resource is deleted from `manifest.yaml` in Git, it is deleted from the cluster on next sync |
+| `automated.selfHeal: true` | If someone manually edits a resource in the cluster, ArgoCD reverts it to match Git within minutes |
+| `CreateNamespace=true` | Ensures `default` namespace exists before applying resources (safe no-op if it already exists) |
+
+---
+
+## 11. Troubleshooting
+
+| Issue | Likely Cause | Fix |
+|---|---|---|
+| Hook Job stays `Pending` | Resource limits on cluster | `kubectl describe pod <hook-pod> -n default` |
+| PreSync fails, sync aborted | Hook Job exit code non-zero | Check logs: `kubectl logs <pod> -n default` |
+| PostSync not triggered | App resources not reaching Healthy | `argocd app get argocdhooks` — check health status |
+| Old hook Job conflicts | Using `name:` without `BeforeHookCreation` | Use `generateName:` or add `BeforeHookCreation` delete policy |
+| Resources re-appear after deletion | `prune: true` not set | Ensure `syncPolicy.automated.prune: true` |
+| Manual changes reverted | `selfHeal: true` is active | Expected behaviour — all changes must go via Git |
+| App stuck `OutOfSync` | `path: .` picking up non-YAML files | Confirm only `.yaml`/`.yml` files in repo root |
+
+---
+
+## 12. Quick Reference — Hook Annotations
+
+```yaml
+metadata:
+  annotations:
+    # Required: defines the hook phase
+    argocd.argoproj.io/hook: PreSync
+
+    # Optional: controls cleanup after execution
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+
+    # Optional: ordering within a phase (lower runs first)
+    argocd.argoproj.io/sync-wave: "1"
+```
+
+---
+
+*This Application follows a GitOps-first pattern — `manifest.yaml` is the single source of truth. All changes to hooks, deployments, and services flow through Git commits and are automatically reconciled by ArgoCD.*
