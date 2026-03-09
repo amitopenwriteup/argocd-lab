@@ -37,6 +37,7 @@ Make sure the following tools are installed and available on your local machine 
 
 ```bash
 # Add Docker's official GPG key:
+sudo su
 sudo apt update
 sudo apt install ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
