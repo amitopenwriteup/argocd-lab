@@ -22,7 +22,7 @@
 ### 1.1 Fork the Repository
 
 Go to the source repository on GitHub:
-**[https://github.com/amitopenwriteup/nginx-argoproj](https://github.com/amitopenwriteup/nginx-argoproj)**
+**[https://github.com/amitopenwriteup/nginx-argoproj.git[](](https://github.com/amitopenwriteup/nginx-argoproj.git)https://github.com/amitopenwriteup/nginx-argoproj)**
 
 1. Click the **Fork** button (top-right corner of the page).
 2. Select your own GitHub account as the owner.
