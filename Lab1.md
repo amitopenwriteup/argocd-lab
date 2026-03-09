@@ -37,7 +37,6 @@ Make sure the following tools are installed and available on your local machine 
 
 ```bash
 # Add Docker's official GPG key:
-sudo su
 sudo apt update
 sudo apt install ca-certificates curl
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -52,6 +51,9 @@ Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
 Components: stable
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
+```
+
+```
 sudo apt update
 
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
