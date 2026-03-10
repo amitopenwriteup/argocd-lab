@@ -130,7 +130,7 @@ argocd proj create dev \
 ---
 
 # List all projects
+
+```
 argocd proj list
-
-
 ```
