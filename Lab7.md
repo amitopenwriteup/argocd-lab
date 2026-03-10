@@ -58,7 +58,7 @@ Navigate to **Applications → + NEW APP** and fill in the following sections:
 | Field | Value |
 |-------|-------|
 | **Cluster** | `https://kubernetes.default.svc` |
-| **Namespace** | *(leave blank or specify target namespace)* |
+| **Namespace** | nginx |
 
 Click **Create**. ArgoCD will begin syncing the Helm chart from the Bitnami repository.
 
