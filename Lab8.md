@@ -23,10 +23,10 @@ Deploy the nginx application from your GitHub repo to the cluster:
 
 ```bash
 argocd app create myappcli \
-  --repo https://github.com/amitopenwriteup/nginx-argoproj.git \
+  --repo https://github.com/amitopenwriteup/nginx-proj.git \
   --path nginx-conf \
   --dest-server https://kubernetes.default.svc \
-  --project myproj \
+  --project myproject \
   --revision main \
   --sync-policy automated \
   --auto-prune \
