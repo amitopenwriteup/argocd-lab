@@ -14,27 +14,6 @@
 
 ---
 
-## 1. Register a GitHub Repository
-
-Use the ArgoCD CLI to connect a GitHub repository using your username and a Personal Access Token (PAT).
-
-**Syntax:**
-
-```bash
-argocd repo add https://github.com/amitopenwriteup/argoappsetlist.git \
-  --username <USERNAME> \
-  --password <PASSWORD_OR_TOKEN>
-```
-
-**Example:**
-
-```bash
-argocd repo add https://github.com/amitopenwriteup/argoappsetlist.git \
-  --username amitopenwriteup \
-  --password <YOUR_TOKEN>
-```
-
-> ⚠️ **Security Note:** Avoid passing tokens directly in the command line in shared or production environments. Use a secrets manager or environment variable instead.
 
 ---
 
