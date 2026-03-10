@@ -10,10 +10,6 @@
 1. [List & Delete Applications](#0-list--delete-applications)
 2. [Lab 1: Understanding the Default Project](#lab-1-understanding-the-default-project)
 3. [Lab 2: Create a Basic Project](#lab-2-create-a-basic-project)
-4. [Add Destinations](#add-destinations)
-5. [Add Source Repositories](#add-source-repositories)
-6. [Manage Project Roles](#manage-project-roles)
-7. [View and Update Projects](#view-and-update-projects)
 
 ---
 
@@ -139,60 +135,12 @@ argocd proj add-destination dev https://kubernetes.default.svc '*'
 
 ---
 
-## Add Source Repositories
 
-```bash
-# Add a specific source repo
-argocd proj add-source dev \
-  https://github.com/amitopenwriteup/argocdlistgit.git
-
-# Add a wildcard source
-argocd proj add-source dev 'https://github.com/amitopenwriteup/*'
-```
 
 ---
 
-## Manage Project Roles
-
-```bash
-# Create a role
-argocd proj role create dev developer
-
-# Add a policy to the role
-argocd proj role add-policy dev developer \
-  --action get \
-  --permission allow \
-  --object 'applications'
-
-# Add a group to the role
-argocd proj role add-group dev developer my-sso-group
-
-# List roles
-argocd proj role list dev
-
-# Get role details
-argocd proj role get dev developer
-```
-
----
-
-## View and Update Projects
-
-```bash
 # List all projects
 argocd proj list
 
-# Get project details
-argocd proj get dev
 
-# Get project in YAML format
-argocd proj get dev -o yaml
-
-# Edit project directly
-kubectl edit appproject dev -n argocd
-
-# Delete a project
-argocd proj delete dev
-# Or
-kubectl delete appproject dev -n argocd
 ```
