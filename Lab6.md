@@ -123,17 +123,7 @@ argocd proj create dev \
 
 ---
 
-## Add Destinations
 
-```bash
-# Add a specific destination to an existing project
-argocd proj add-destination dev https://kubernetes.default.svc default
-
-# Add a wildcard destination
-argocd proj add-destination dev https://kubernetes.default.svc '*'
-```
-
----
 
 
 
