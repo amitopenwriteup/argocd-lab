@@ -58,7 +58,7 @@ spec:
       name: '{{namespace}}-color-app'
     spec:
       # applications will be in myproj project
-      project: myproj
+      project: myproject
       source:
         repoURL: https://github.com/amitopenwriteup/argoappsetlist.git
         targetRevision: HEAD
