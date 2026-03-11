@@ -127,64 +127,7 @@ path: .../app-database       namespace: prod
 
 ---
 
-## 6. Repository Structure
 
-The Git generator scans for subdirectories matching the path glob. Each subdirectory should contain valid Kubernetes manifests:
-
-```
-git-dir-generator-example/argo-projects/
-├── app-frontend/
-│   ├── deployment.yaml
-│   └── service.yaml
-├── app-backend/
-│   ├── deployment.yaml
-│   └── service.yaml
-└── app-database/
-    ├── statefulset.yaml
-    └── service.yaml
-```
-
-> All manifests in each directory deploy to **all three namespaces** (`dev`, `qa`, `prod`). To use environment-specific values, combine with Helm or Kustomize overlays.
-
----
-
-## 7. Sync Policy Behaviour
-
-| Setting | Behaviour |
-|---|---|
-| `automated.prune: true` | Deletes cluster resources when removed from Git |
-| `automated.selfHeal: true` | Reverts any manual `kubectl` changes to match Git state |
-| `CreateNamespace=true` | Runs `kubectl create namespace` automatically if absent |
-
----
-
-## 8. Adding or Removing Environments
-
-To add a new environment (e.g. `staging`), append it to the list generator:
-
-```yaml
-- list:
-    elements:
-    - namespace: dev
-    - namespace: qa
-    - namespace: staging   # ← add here
-    - namespace: prod
-```
-
-ArgoCD will automatically create new Applications for all existing app directories in the new namespace. To remove an environment, delete its entry — with `prune: true`, ArgoCD will clean up the corresponding Applications.
-
----
-
-## 9. Prerequisites & Setup
-
-- ArgoCD installed in the `argocd` namespace
-- ArgoCD project `default` exists (or update `spec.project` to your project name)
-- For private repos: add HTTPS credentials:
-  ```bash
-  argocd repo add https://github.com/amitopenwriteup/ArgoCD-ApplicationSet-Demo.git \
-    --username <user> --password <PAT>
-  ```
-- ArgoCD service account has permission to create namespaces
 
 ### Apply the Manifest
 
