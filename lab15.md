@@ -8,10 +8,6 @@
 
 This document describes the ArgoCD ApplicationSet resource using the **Git Directory Generator**. It automatically discovers directories in a GitHub repository and creates an ArgoCD Application for each one — enabling scalable, GitOps-driven multi-environment deployments.
 
-**Key changes from the original configuration:**
-- Repository URL changed from SSH (`git@github.com`) to **HTTPS** for broader compatibility
-- Destination cluster changed to `https://kubernetes.default.svc` (in-cluster reference)
-
 ---
 
 ## 2. Updated YAML Manifest
