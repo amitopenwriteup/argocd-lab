@@ -78,43 +78,6 @@ spec:
 
 ---
 
-## 4. SSH vs HTTPS Git URL
-
-### Original (SSH)
-```yaml
-repoURL: git@github.com:amitopenwriteup/ArgoCD-ApplicationSet-Demo.git
-```
-Requires an SSH private key configured as a repository credential in ArgoCD. Suitable for private repos where SSH keys are managed.
-
-### Updated (HTTPS)
-```yaml
-repoURL: https://github.com/amitopenwriteup/ArgoCD-ApplicationSet-Demo.git
-```
-Works with GitHub Personal Access Tokens (PAT) or no credentials at all for public repositories. Preferred for CI/CD pipelines and in-cluster deployments.
-
-> **For private repos:** add credentials via:
-> ```bash
-> argocd repo add https://github.com/amitopenwriteup/ArgoCD-ApplicationSet-Demo.git \
->   --username <user> --password <PAT>
-> ```
-
----
-
-## 5. Destination: In-Cluster vs External
-
-### External Cluster (original)
-```yaml
-server: https://92389502100E5959297F1C3CEC2CA298.sk1.ap-south-1.eks.amazonaws.com
-```
-Points to a remote Amazon EKS cluster. Requires that cluster to be registered with ArgoCD using its kubeconfig credentials.
-
-### In-Cluster (updated)
-```yaml
-server: https://kubernetes.default.svc
-```
-The special value `https://kubernetes.default.svc` instructs ArgoCD to deploy to the **same cluster it is running in**. No additional cluster registration is required.
-
----
 
 ## 6. How the Git Directory Generator Works
 
@@ -187,16 +150,6 @@ kubectl get namespaces | grep app-
 
 ---
 
-## 9. Troubleshooting
 
-| Issue | Likely Cause | Fix |
-|---|---|---|
-| `PermissionDenied` on git clone | SSH URL with no key | Switch to HTTPS URL |
-| `cluster not registered` error | External EKS endpoint used | Use `https://kubernetes.default.svc` |
-| Namespace not created | `CreateNamespace=true` missing | Add to `syncOptions` |
-| App not auto-synced | `automated` block missing | Add `syncPolicy.automated` |
-| Directory not discovered | Wrong glob path | Verify path exists in repo |
-
----
 
 *Generated configuration uses `https://kubernetes.default.svc` for in-cluster deployments and HTTPS GitHub URLs for credential-free access to public repositories.*
