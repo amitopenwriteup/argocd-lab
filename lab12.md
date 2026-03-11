@@ -146,7 +146,9 @@ argocd appset list
 ```bash
 argocd app list
 ```
-
+```
+Go in Argocd UI and delete one application resource "dev-color-app"
+```
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │              argocd app list output                          │
