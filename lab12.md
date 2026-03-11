@@ -28,7 +28,7 @@ The **List Generator** creates one application per element defined in the list.
 
 ```bash
 git clone https://github.com/amitopenwriteup/argoappsetlist.git
-cd argocdappsetlist
+cd argoappsetlist
 ```
 
 ---
