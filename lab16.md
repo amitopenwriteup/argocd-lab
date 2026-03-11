@@ -66,33 +66,7 @@ spec:
 
 ---
 
-## 3. How the Matrix Generator Works
 
-The matrix generator combines the output of two child generators and computes their cartesian product. Each combination becomes one set of template variables used to render a single ArgoCD Application.
-
-```
-Git Generator output         List Generator output
-──────────────────────       ──────────────────────
-path: .../app-frontend  ×    namespace: dev
-path: .../app-backend        namespace: qa
-path: .../app-database       namespace: prod
-```
-
-**Resulting Applications (3 × 3 = 9):**
-
-| Application Name | Source Path | Destination Namespace |
-|---|---|---|
-| `app-frontend-dev` | `.../app-frontend` | `dev` |
-| `app-frontend-qa` | `.../app-frontend` | `qa` |
-| `app-frontend-prod` | `.../app-frontend` | `prod` |
-| `app-backend-dev` | `.../app-backend` | `dev` |
-| `app-backend-qa` | `.../app-backend` | `qa` |
-| `app-backend-prod` | `.../app-backend` | `prod` |
-| `app-database-dev` | `.../app-database` | `dev` |
-| `app-database-qa` | `.../app-database` | `qa` |
-| `app-database-prod` | `.../app-database` | `prod` |
-
----
 
 ## 4. Template Variables
 
