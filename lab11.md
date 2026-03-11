@@ -143,5 +143,5 @@ In the ArgoCD UI:
 - The deletion finalizer ensures Kubernetes resources are cleaned up in the correct order before the application is removed
 - You will see the cleanup progress before the application is fully deleted
 
-> ℹ️ **What is a Deletion Finalizer?**  
+>  **What is a Deletion Finalizer?**  
 > A finalizer is a pre-delete hook that prevents the application object from being removed until all associated cluster resources have been successfully cleaned up. Without it, deleting an ArgoCD application may leave orphaned resources on the cluster.
