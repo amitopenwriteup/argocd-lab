@@ -39,7 +39,7 @@ Map the forked repo as a source in your ArgoCD project.
 | Field | Value |
 |-------|-------|
 | **Application Name** | `lab1-autosync` |
-| **Project** | `myproj` (your project name) |
+| **Project** | `myproject` (your project name) |
 | **Sync Policy** | Automatic |
 
 **3.** Fill in **Source**:
