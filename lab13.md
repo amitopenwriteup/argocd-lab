@@ -117,9 +117,9 @@ kubectl get applicationset helm-application-amit -n argocd
 kubectl describe applicationset helm-application-amit -n argocd
 kubectl get applications -n argocd
 kubectl get application my-nginx -n argocd
-kubectl get application my-apache -n argocd
+kubectl get application my-mysql -n argocd
 kubectl describe application my-nginx -n argocd
-kubectl describe application my-apache -n argocd
+kubectl describe application my-mysql -n argocd
 kubectl delete applicationset helm-application-amit -n argocd
 
 ```
