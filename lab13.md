@@ -76,9 +76,9 @@ spec:
           - chart: nginx
             releaseName: my-nginx
             targetRevision: 22.4.3
-          - chart: mysql
+          - chart: mariadb
             releaseName: my-mysql
-            targetRevision: 9.23.0
+            targetRevision: 25.0.1
   template:
     metadata:
       name: '{{releaseName}}'
