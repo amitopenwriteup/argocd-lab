@@ -73,9 +73,9 @@ spec:
           - chart: nginx
             releaseName: my-nginx
             targetRevision: 22.4.3
-          - chart: apache
-            releaseName: my-apache
-            targetRevision: 11.2.5
+          - chart: mysql
+            releaseName: my-mysql
+            targetRevision: 9.23.0
   template:
     metadata:
       name: '{{releaseName}}'
