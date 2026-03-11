@@ -106,14 +106,19 @@ spec:
 ## 6. Verify Deployment
 
 ```bash
-# Check ApplicationSet status
+# ApplicationSet Commands
+
+kubectl create -f helmset.yaml
+kubectl get applicationset -n argocd
+kubectl get applicationset helm-application-amit -n argocd
 kubectl describe applicationset helm-application-amit -n argocd
-
-# List generated Applications
 kubectl get applications -n argocd
+kubectl get application my-nginx -n argocd
+kubectl get application my-apache -n argocd
+kubectl describe application my-nginx -n argocd
+kubectl describe application my-apache -n argocd
+kubectl delete applicationset helm-application-amit -n argocd
 
-# Confirm service type is ClusterIP
-kubectl get svc -n amit-default
 ```
 
 ---
