@@ -31,11 +31,11 @@ spec:
         elements:
           - chart: nginx
             releaseName: my-nginx
-            targetRevision: 18.1.2
+            targetRevision: 22.4.3
             syncWave: "1"          # nginx deploys first
-          - chart: apache
-            releaseName: my-apache
-            targetRevision: 11.2.5
+          - chart: mysql
+            releaseName: my-mysql
+            targetRevision: 9.23.0
             syncWave: "2"          # apache deploys second
   template:
     metadata:
