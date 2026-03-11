@@ -59,6 +59,9 @@ The `service.type` is set to `ClusterIP` via `helm.values` in the template. This
 ---
 
 ## 5. Full YAML Manifest
+```
+vi helmset.yaml
+```
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
