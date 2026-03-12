@@ -209,7 +209,7 @@ kubectl scale deployment demo-app -n lab3 --replicas=5
 ```bash
 # Create a resource that will need replacement
 # Create a headless service for the StatefulSet
-cat > service.yaml << 'EOF'
+cat > service1.yaml << 'EOF'
 apiVersion: v1
 kind: Service
 metadata:
