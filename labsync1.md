@@ -213,7 +213,7 @@ cat > service1.yaml << 'EOF'
 apiVersion: v1
 kind: Service
 metadata:
-  name: nginx-stateless
+  name: nginx
 spec:
   selector:
     app: nginx-stateful
@@ -270,7 +270,7 @@ git push
 
 **Observe in UI:**
 - Try to **SYNC** without REPLACE — you'll get an error (immutable field)
-- Enable **REPLACE** option
+- Enable **REPLACE** and **FORCE** option
 - Click **SYNC** — resource will be deleted and recreated
 
 ---
