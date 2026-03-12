@@ -118,6 +118,9 @@ spec:
           name: demo-config
 EOF
 ```
+```
+run manual sync
+```
 
 ```
 
@@ -125,9 +128,7 @@ git add deployment-with-dependency.yaml
 git commit -m "Add deployment with configmap dependency"
 git push
 ```
-```
-run manual sync
-```
+
 # Now remove the configmap
 ```
 git rm configmap.yaml
