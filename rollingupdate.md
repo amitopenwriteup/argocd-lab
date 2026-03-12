@@ -129,9 +129,6 @@ kubectl get deployment rolling-app \
 ---
 
 
-
-## SECTION 5: Rollback Strategy 1 — ArgoCD UI Rollback
-
 **Step 1 — Open History from UI**
 
 ```
