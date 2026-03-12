@@ -16,7 +16,10 @@ This ArgoCD `Application` deploys Kubernetes manifests from the `argocdhooks` re
 - Deploys all resources into the `default` namespace of the in-cluster Kubernetes API
 
 ---
+```
+vi application.yaml
 
+```
 ## 2. ArgoCD Application Manifest
 
 ```yaml
@@ -116,132 +119,6 @@ Git push / sync triggered
 
 ---
 
-## 6. Typical `manifest.yaml` Structure
-
-A hooks-based `manifest.yaml` in the root of the repo typically contains multiple YAML documents:
-
-```yaml
-# ── PreSync: runs before manifests are applied ──────────────────────────
-apiVersion: batch/v1
-kind: Job
-metadata:
-  generateName: pre-sync-hook-
-  namespace: default
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-spec:
-  template:
-    spec:
-      containers:
-        - name: pre-sync
-          image: alpine:3.18
-          command: ["sh", "-c", "echo PreSync hook running && sleep 5"]
-      restartPolicy: Never
-  backoffLimit: 1
----
-# ── Main Application Resource ────────────────────────────────────────────
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: my-app
-  namespace: default
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: my-app
-  template:
-    metadata:
-      labels:
-        app: my-app
-    spec:
-      containers:
-        - name: my-app
-          image: nginx:latest
-          ports:
-            - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: my-app-svc
-  namespace: default
-spec:
-  selector:
-    app: my-app
-  ports:
-    - port: 80
-      targetPort: 80
----
-# ── PostSync: runs after all resources are healthy ───────────────────────
-apiVersion: batch/v1
-kind: Job
-metadata:
-  generateName: post-sync-hook-
-  namespace: default
-  annotations:
-    argocd.argoproj.io/hook: PostSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-spec:
-  template:
-    spec:
-      containers:
-        - name: post-sync
-          image: curlimages/curl:latest
-          command: ["sh", "-c", "curl -sf http://my-app-svc/healthz && echo PostSync passed"]
-      restartPolicy: Never
-  backoffLimit: 1
----
-# ── SyncFail: runs only when sync fails ──────────────────────────────────
-apiVersion: batch/v1
-kind: Job
-metadata:
-  generateName: sync-fail-hook-
-  namespace: default
-  annotations:
-    argocd.argoproj.io/hook: SyncFail
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
-spec:
-  template:
-    spec:
-      containers:
-        - name: sync-fail
-          image: alpine:3.18
-          command: ["sh", "-c", "echo SYNC FAILED - sending alert"]
-      restartPolicy: Never
-  backoffLimit: 1
-```
-
----
-
-## 7. Hook Types Reference
-
-| Hook | Runs When | Common Use |
-|---|---|---|
-| `PreSync` | Before any manifests are applied | DB migrations, pre-flight validation |
-| `Sync` | Alongside manifest apply | Parallel setup tasks |
-| `PostSync` | After all resources are Healthy | Health checks, smoke tests, notifications |
-| `SyncFail` | When sync operation fails | Failure alerts, rollback triggers |
-| `Skip` | Never | Exclude a resource from sync entirely |
-
----
-
-## 8. Hook Delete Policies
-
-| Policy | Behaviour |
-|---|---|
-| `HookSucceeded` | Auto-deletes Job after successful completion |
-| `HookFailed` | Auto-deletes Job after failure |
-| `BeforeHookCreation` | Deletes previous hook resource before creating a new one |
-
-**Always-cleanup pattern:**
-
-```yaml
-argocd.argoproj.io/hook-delete-policy: HookSucceeded,HookFailed
-```
-
----
 
 ## 9. Deploying the Application
 
