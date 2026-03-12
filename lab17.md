@@ -33,9 +33,9 @@ spec:
             releaseName: my-nginx
             targetRevision: 22.4.3
             syncWave: "1"          # nginx deploys first
-          - chart: mysql
+          - chart: mariadb
             releaseName: my-mysql
-            targetRevision: 9.23.0
+            targetRevision: 25.0.1
             syncWave: "2"          # apache deploys second
   template:
     metadata:
