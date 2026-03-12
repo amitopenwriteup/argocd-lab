@@ -62,10 +62,6 @@ Test **Skip Schema Validation**, **Prune Last**, **Respect Ignore Differences**,
 Remove the bad deployment and set up a resource with a dependency:
 
 ```bash
-# Remove bad deployment
-git rm bad-deployment.yaml
-git commit -m "Remove bad deployment"
-git push
 
 # Create a ConfigMap
 cat > configmap.yaml << 'EOF'
