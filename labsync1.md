@@ -208,6 +208,23 @@ kubectl scale deployment demo-app -n lab3 --replicas=5
 
 ```bash
 # Create a resource that will need replacement
+# Create a headless service for the StatefulSet
+cat > service.yaml << 'EOF'
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-stateless
+spec:
+  selector:
+    app: nginx-stateful
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  type: ClusterIP
+EOF
+
+# Create a resource that will need replacement
 cat > statefulset.yaml << 'EOF'
 apiVersion: apps/v1
 kind: StatefulSet
@@ -230,18 +247,16 @@ spec:
         ports:
         - containerPort: 80
           name: web
-  volumeClaimTemplates:
-  - metadata:
-      name: www
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      resources:
-        requests:
-          storage: 1Gi
 EOF
 
+git add service.yaml statefulset.yaml
+git commit -m "Add statefulset and stateless service"
+git push
+
+# Sync first, then modify immutable field
+sed -i 's/serviceName: "nginx"/serviceName: "nginx-service"/' statefulset.yaml
 git add statefulset.yaml
-git commit -m "Add statefulset"
+git commit -m "Modify immutable field"
 git push
 
 # Sync first, then modify immutable field
