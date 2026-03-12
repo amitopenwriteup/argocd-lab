@@ -83,7 +83,7 @@ https://<your-argocd-server>
 
 | Field          | Value                                               |
 |----------------|-----------------------------------------------------|
-| Repository URL | `git@github.com:<your-username>/argocd-rolling.git` |
+| Repository URL | `https://github.com/<username>/argocd-rolling.git` |
 | Revision       | `HEAD`                                              |
 | Path           | `.`                                                 |
 
