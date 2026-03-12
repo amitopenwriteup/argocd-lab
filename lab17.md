@@ -42,7 +42,7 @@ spec:
       annotations:
         argocd.argoproj.io/sync-wave: '{{syncWave}}'   # controls deploy order
     spec:
-      project: stage-devseccops
+      project: default
       source:
         repoURL: https://charts.bitnami.com/bitnami
         chart: '{{chart}}'
