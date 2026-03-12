@@ -50,7 +50,7 @@ spec:
         helm:
           releaseName: '{{releaseName}}'
       destination:
-        name: arn:aws:eks:ap-south-1:130705418859:cluster/stage-devseccops-eks-cluster
+        server: https://kubernetes.default.svc
         namespace: amit-default
       syncPolicy:
         automated:
