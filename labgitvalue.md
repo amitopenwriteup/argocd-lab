@@ -117,6 +117,60 @@ nginx-proj/
 - The Git repository `amitopenwriteup/nginx-proj` accessible from ArgoCD
 
 ---
+```
+vi applicationset.yaml
+
+```
+## ApplicationSet YAML
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: helm-application-amit
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - chart: nginx
+                  releaseName: my-nginx
+                  targetRevision: 22.4.3
+          - git:
+              repoURL: https://github.com/amitopenwriteup/nginx-proj.git
+              revision: HEAD
+              files:
+                - path: nginx-helm/dev/dev-values.yaml
+                - path: nginx-helm/qa/qa-values.yaml
+  template:
+    metadata:
+      name: '{{releaseName}}-{{env}}'           # my-nginx-dev / my-nginx-qa
+    spec:
+      project: default
+      sources:
+        - repoURL: https://charts.bitnami.com/bitnami
+          chart: '{{chart}}'
+          targetRevision: '{{targetRevision}}'
+          helm:
+            releaseName: '{{releaseName}}'
+            valueFiles:
+              - $values/{{valuesFile}}
+        - repoURL: https://github.com/amitopenwriteup/nginx-proj.git
+          targetRevision: HEAD
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'amit-{{env}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+```
+
 
 ## Deployment
 
@@ -135,20 +189,10 @@ kubectl get applications -n argocd
 # my-nginx-qa    Synced   Healthy
 ```
 
+```bash
+kubectl delete -f applicationset.yaml -n argocd
+```
+---
 ---
 
-## Adding a New Environment
-
-To onboard a new environment (e.g., `staging`):
-
-1. Create a new values file in the Git repo:
-   ```
-   nginx-helm/staging/staging-values.yaml
-   ```
-
-2. Add the path to the Git generator in the ApplicationSet:
-   ```yaml
-   - path: nginx-helm/staging/staging-values.yaml
-   ```
-
-3. ArgoCD will automatically generate and sync a new `my-nginx-staging` Application targeting the `amit-staging` namespace.
+ namespace.
