@@ -142,7 +142,7 @@ git push
 - Enable ✅ **Prune Resources** in sync policy
 - Enable ✅ **Prune Last** in sync options
 - Click **Sync**
-- With Prune Last, the dependent deployment is removed before the ConfigMap, preventing missing dependency errors
+
 
 ---
 
