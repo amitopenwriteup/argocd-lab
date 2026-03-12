@@ -134,11 +134,7 @@ kubectl get namespaces
 # Check pods across all namespaces
 kubectl get pods --all-namespaces
 
-# Check services across all namespaces
-kubectl get svc --all-namespaces
 
-# Check all resources deployed
-kubectl get all --all-namespaces | grep -v kube-system
 ```
 
 ```
