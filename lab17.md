@@ -1,6 +1,5 @@
 # ArgoCD ApplicationSet — Helm Chart List Generator with Sync Waves
 
-> **Project:** `stage-devseccops` | **Cluster:** AWS EKS `ap-south-1` | **Registry:** Bitnami Helm
 
 ---
 
@@ -70,7 +69,7 @@ The list generator produces one ArgoCD Application per element:
 | Application Name | Chart | Version | Namespace | Sync Wave |
 |---|---|---|---|---|
 | `my-nginx` | `nginx` | `18.1.2` | `amit-default` | `1` |
-| `my-apache` | `apache` | `11.2.5` | `amit-default` | `2` |
+| `my-apache` | `mariadb` | `25.0.1` | `amit-default` | `2` |
 
 ---
 
@@ -94,7 +93,6 @@ The list generator produces one ArgoCD Application per element:
 | `generators[].list.elements` | Array of objects | Each element renders one Application |
 | `chart` | `nginx` / `apache` | Helm chart name from Bitnami registry |
 | `releaseName` | `my-nginx` / `my-apache` | Helm release name and ArgoCD Application name |
-| `targetRevision` | `18.1.2` / `11.2.5` | Pinned Helm chart version |
 | `syncWave` | `"1"` / `"2"` | Deployment order (lower = earlier) |
 | `source.repoURL` | `https://charts.bitnami.com/bitnami` | Bitnami public Helm registry |
 | `source.chart` | `{{chart}}` | Chart name resolved from list element |
@@ -134,80 +132,7 @@ annotations:
 
 > **Note:** `syncWave` values are strings in the list elements (`"1"`, `"2"`) but ArgoCD interprets them as integers for ordering. Negative values (e.g. `"-1"`) are valid and deploy before wave `0`.
 
-### Adding More Charts with Custom Wave Order
 
-```yaml
-elements:
-  - chart: nginx
-    releaseName: my-nginx
-    targetRevision: 18.1.2
-    syncWave: "1"
-  - chart: apache
-    releaseName: my-apache
-    targetRevision: 11.2.5
-    syncWave: "2"
-  - chart: redis
-    releaseName: my-redis
-    targetRevision: 20.0.1
-    syncWave: "3"    # ← deploys after apache is healthy
-```
-
----
-
-## 7. Helm Source vs Git Source
-
-This ApplicationSet uses a **Helm registry** as the source — not a Git repository.
-
-| Property | This Config | Git-based Config |
-|---|---|---|
-| `source.repoURL` | Helm chart registry URL | GitHub / GitLab repo URL |
-| `source.chart` | Chart name (required) | Not used |
-| `source.path` | Not used | Directory path in repo |
-| `source.targetRevision` | Helm chart version (semver) | Git branch / tag / commit |
-| Version pinning | Exact chart version | Git tag or commit SHA |
-
-> When `chart` is specified alongside `repoURL`, ArgoCD treats the source as a Helm registry and pulls the chart directly — no Git clone occurs.
-
----
-
-## 8. Destination: EKS Cluster by ARN
-
-```yaml
-destination:
-  name: arn:aws:eks:ap-south-1:130705418859:cluster/stage-devseccops-eks-cluster
-  namespace: amit-default
-```
-
-The destination uses `name` (cluster label registered in ArgoCD) rather than `server` (API endpoint URL). The EKS cluster must be pre-registered with ArgoCD.
-
-### Register the EKS Cluster with ArgoCD
-
-```bash
-# Update local kubeconfig for the EKS cluster
-aws eks update-kubeconfig \
-  --region ap-south-1 \
-  --name stage-devseccops-eks-cluster
-
-# Register the cluster with ArgoCD
-argocd cluster add \
-  arn:aws:eks:ap-south-1:130705418859:cluster/stage-devseccops-eks-cluster \
-  --name stage-devseccops-eks-cluster
-```
-
-> After registration, ArgoCD assigns the ARN as the cluster name. The `destination.name` field must match exactly.
-
----
-
-## 9. Prerequisites & Setup
-
-- ArgoCD installed in the `argocd` namespace
-- ArgoCD project `stage-devseccops` created with:
-  - Source: `https://charts.bitnami.com/bitnami` allowed
-  - Destination: EKS cluster + `amit-default` namespace allowed
-- EKS cluster registered with ArgoCD (see Section 8)
-- `aws` CLI configured with sufficient IAM permissions
-
-### Apply the Manifest
 
 ```bash
 kubectl apply -f applicationset.yaml -n argocd
