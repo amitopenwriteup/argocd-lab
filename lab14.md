@@ -50,6 +50,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: hook
+  namespace: argocd
 spec:
   destination:
     namespace: ''
