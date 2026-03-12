@@ -88,6 +88,9 @@ git commit -m "Add cm"
 git push
 ```
 
+```
+run manual sync from ui
+```
 Sync the application in the ArgoCD UI, then create a deployment that depends on the ConfigMap:
 
 ```bash
@@ -118,9 +121,7 @@ spec:
           name: demo-config
 EOF
 ```
-```
-run manual sync
-```
+
 
 ```
 
