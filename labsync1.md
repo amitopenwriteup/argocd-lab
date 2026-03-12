@@ -250,9 +250,12 @@ spec:
 EOF
 
 ```
-git add service.yaml statefulset.yaml
+```
+git add service1.yaml statefulset.yaml
 git commit -m "Add statefulset and stateless service"
 git push
+```
+
 ```
 
 **UI option sync it**
