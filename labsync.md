@@ -129,6 +129,7 @@ git push
 run manual sync
 ```
 # Now remove the configmap
+```
 git rm configmap.yaml
 git commit -m "Remove configmap (will cause issues)"
 git push
