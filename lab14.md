@@ -131,29 +131,10 @@ argocd app get hook
 # Check all namespaces created
 kubectl get namespaces
 
-# Check pods across all namespaces
-kubectl get pods --all-namespaces
 
 
 ```
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│              Expected Namespaces                             │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  kubectl get namespaces output:                              │
-│                                                              │
-│  NAME        STATUS   AGE                                    │
-│  argocd      Active   ...                                    │
-│  frontend    Active   ...  ← created by ArgoCD              │
-│  backend     Active   ...  ← created by ArgoCD              │
-│  database    Active   ...  ← created by ArgoCD              │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-```
-
----
 
 ## Part 6: Check Application Sync Status
 
@@ -164,78 +145,7 @@ argocd app get hook
 # View application in YAML
 kubectl get application hook -n argocd -o yaml
 
-# Watch sync progress
-argocd app sync hook --watch
 
-# Check application history
-argocd app history hook
 ```
 
 ---
-
-## Part 7: Manual Sync (if needed)
-
-```bash
-# Trigger manual sync
-argocd app sync hook
-
-# Sync with force
-argocd app sync hook --force
-
-# Sync and prune
-argocd app sync hook --prune
-```
-
----
-
-## Part 8: Delete the Application
-
-```bash
-# Delete application (keeps deployed resources)
-argocd app delete hook
-
-# Delete application and all deployed resources
-argocd app delete hook --cascade
-
-# Verify deletion
-argocd app list
-kubectl get namespaces
-```
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│              delete vs delete --cascade                      │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  argocd app delete hook                                      │
-│    → removes ArgoCD Application only                        │
-│    → deployed resources remain in cluster                   │
-│                                                              │
-│  argocd app delete hook --cascade                            │
-│    → removes ArgoCD Application                             │
-│    → deletes ALL deployed resources from cluster ❌          │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Quick Reference
-
-| Command | Description |
-|---|---|
-| `kubectl apply -f application.yaml -n argocd` | Create ArgoCD Application |
-| `argocd app list` | List all applications |
-| `argocd app get hook` | Get application details |
-| `argocd app sync hook` | Manually sync application |
-| `argocd app sync hook --force` | Force sync |
-| `argocd app history hook` | View sync history |
-| `kubectl get application -n argocd` | List via kubectl |
-| `kubectl get pods --all-namespaces` | Check all pods |
-| `kubectl get namespaces` | Verify namespaces created |
-| `argocd app delete hook` | Delete application only |
-| `argocd app delete hook --cascade` | Delete app + all resources |
-
----
-
-> **Note:** The `destination.namespace` is left empty (`''`) because this application deploys resources across multiple namespaces. Each manifest inside the repo defines its own namespace, and `CreateNamespace=true` ensures they are created automatically.
