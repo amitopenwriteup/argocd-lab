@@ -54,53 +54,8 @@ Test **Skip Schema Validation**, **Prune Last**, **Respect Ignore Differences**,
 
 ---
 
-## Test Scenarios
 
-### Test 1 — Skip Schema Validation
 
-Navigate to `lab3-sync-options/templates` and create a deployment with an intentional schema issue:
-
-```bash
-cat > bad-deployment.yaml << 'EOF'
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: bad-app
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: bad
-  template:
-    metadata:
-      labels:
-        app: bad
-    spec:
-      containers:
-      - name: app
-        image: nginx:1.21
-        wrongField: "this will fail validation"
-EOF
-
-git add bad-deployment.yaml
-git commit -m "Add deployment with validation error"
-git push
-```
-
-**Observe in the ArgoCD UI:**
-
-- Click **Refresh** — then attempt to **Sync**
-- A validation error will appear
-
-Enable Skip Schema Validation:
-
-1. Click **App Details → Edit**
-2. Find **Sync Options** and check ✅ **Skip Schema Validation**
-3. Click **Save**, then **Sync** again
-
-> ℹ️ Schema validation will be skipped. The resource may still fail at apply time, but the pre-validation step is bypassed.
-
----
 
 ### Test 2 — Prune Last
 
