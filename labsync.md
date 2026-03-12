@@ -27,7 +27,7 @@ Test **Skip Schema Validation**, **Prune Last**, **Respect Ignore Differences**,
 
 | Field | Value |
 |-------|-------|
-| **Repository URL** | `https://github.com/amitopenwriteup/argoappsynclab.git` |
+| **Repository URL** | `https://github.com/<userid>/argoappsynclab.git` |
 | **Revision** | `HEAD` |
 | **Path** | `lab3-sync-options` |
 
