@@ -58,8 +58,12 @@ Test **Skip Schema Validation**, **Prune Last**, **Respect Ignore Differences**,
 
 
 ### Test 2 — Prune Last
+go to git repo which you cloned
 
-Remove the bad deployment and set up a resource with a dependency:
+```
+cd argoappsynclab/lab3-sync-options/templates
+
+```
 
 ```bash
 
