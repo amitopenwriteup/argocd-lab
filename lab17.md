@@ -35,7 +35,7 @@ spec:
           - chart: mariadb
             releaseName: my-mysql
             targetRevision: 25.0.1
-            syncWave: "2"          # apache deploys second
+            syncWave: "2"          # mysql deploys second
   template:
     metadata:
       name: '{{releaseName}}'
@@ -69,7 +69,7 @@ The list generator produces one ArgoCD Application per element:
 | Application Name | Chart | Version | Namespace | Sync Wave |
 |---|---|---|---|---|
 | `my-nginx` | `nginx` | `18.1.2` | `amit-default` | `1` |
-| `my-apache` | `mariadb` | `25.0.1` | `amit-default` | `2` |
+| `my-mysql` | `mariadb` | `25.0.1` | `amit-default` | `2` |
 
 ---
 
@@ -91,8 +91,8 @@ The list generator produces one ArgoCD Application per element:
 | Field | Value | Description |
 |---|---|---|
 | `generators[].list.elements` | Array of objects | Each element renders one Application |
-| `chart` | `nginx` / `apache` | Helm chart name from Bitnami registry |
-| `releaseName` | `my-nginx` / `my-apache` | Helm release name and ArgoCD Application name |
+| `chart` | `nginx` / `mysql` | Helm chart name from Bitnami registry |
+| `releaseName` | `my-nginx` / `my-mysql` | Helm release name and ArgoCD Application name |
 | `syncWave` | `"1"` / `"2"` | Deployment order (lower = earlier) |
 | `source.repoURL` | `https://charts.bitnami.com/bitnami` | Bitnami public Helm registry |
 | `source.chart` | `{{chart}}` | Chart name resolved from list element |
@@ -112,7 +112,7 @@ Sync waves control the **sequence** in which ArgoCD syncs resources during a sin
 ```
 Sync Wave 1                    Sync Wave 2
 ───────────────                ───────────────
-my-nginx (nginx 18.1.2)   →   my-apache (apache 11.2.5)
+my-nginx (nginx 18.1.2)   →   my-mysql (mysql 11.2.5)
   Deploy & wait healthy          Deploy after nginx is ready
 ```
 
@@ -146,7 +146,7 @@ argocd app list
 
 # Check sync status of each release
 argocd app get my-nginx
-argocd app get my-apache
+argocd app get my-mysql
 
 # Watch live sync progress
 argocd app list --output wide
