@@ -128,87 +128,7 @@ kubectl get deployment rolling-app \
 
 ---
 
-## SECTION 3: Rolling Update — v1 → v2
 
-```bash
-# Update image to v2
-sed -i 's/nginx:1.19/nginx:1.20/' deployment.yaml
-
-git add deployment.yaml
-git commit -m "v2: nginx:1.20 - rolling update"
-git push
-```
-
-**Sync from UI**
-
-```
-App Detail View → SYNC → SYNCHRONIZE
-
-Watch App Tree:
-  Pod-1  Yellow (Progressing) → Green (Healthy)
-  Pod-2  Yellow (Progressing) → Green (Healthy)
-  Pod-3  Yellow (Progressing) → Green (Healthy)
-  Pod-4  Yellow (Progressing) → Green (Healthy)
-
-  ← pods update one at a time due to maxUnavailable: 0
-```
-
-**Verify rolling update from CLI**
-
-```bash
-# Watch rollout in real time
-kubectl rollout status deployment/rolling-app
-
-# Check pods updating one by one
-kubectl get pods -l app=rolling-app -w
-
-# Confirm new image
-kubectl get deployment rolling-app \
-  -o jsonpath='{.spec.template.spec.containers[0].image}'
-# Expected: nginx:1.20
-```
-
----
-
-## SECTION 4: Simulate Bad Release — v2 → v3 Broken
-
-```bash
-# Push a broken image
-sed -i 's/nginx:1.20/nginx:BROKEN/' deployment.yaml
-
-git add deployment.yaml
-git commit -m "v3: nginx:BROKEN - bad release"
-git push
-```
-
-**Sync from UI**
-
-```
-App Detail View → SYNC → SYNCHRONIZE
-
-Watch App Tree:
-  New pods stuck in Yellow (ImagePullBackOff)
-  Old pods still Green ← maxUnavailable: 0 protects them
-
-  Deployment health → Degraded ❌
-```
-
-**Observe the failure**
-
-```bash
-# See stuck pods
-kubectl get pods -l app=rolling-app
-
-# Check why new pods are failing
-kubectl describe pod -l app=rolling-app | grep -A5 "Events"
-# Expected: ImagePullBackOff / ErrImagePull
-
-# Rollout is stalled — old pods still serving traffic ✅
-kubectl rollout status deployment/rolling-app
-# Expected: Waiting for deployment rollout to finish
-```
-
----
 
 ## SECTION 5: Rollback Strategy 1 — ArgoCD UI Rollback
 
@@ -221,29 +141,6 @@ History table:
   ID  Revision   Message
   0   abc1234    v1: nginx:1.19 - baseline
   1   def5678    v2: nginx:1.20 - rolling update
-  2   ghi9012    v3: nginx:BROKEN - bad release  ← current
-```
-
-**Step 2 — Rollback to v2**
 
 ```
-→ Click revision ID 1 (v2)
-→ Click "ROLLBACK" button
-→ Confirm dialog → OK
-```
-
-**Step 3 — Verify from CLI**
-
-```bash
-# Confirm rolled back image
-kubectl get deployment rolling-app \
-  -o jsonpath='{.spec.template.spec.containers[0].image}'
-# Expected: nginx:1.20
-
-# App will show OutOfSync (git still has BROKEN)
-argocd app get argocd-rolling
-# Sync Status: OutOfSync ← expected
-```
-
----
 
