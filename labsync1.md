@@ -249,15 +249,14 @@ spec:
           name: web
 EOF
 
+```
 git add service.yaml statefulset.yaml
 git commit -m "Add statefulset and stateless service"
 git push
+```
 
-# Sync first, then modify immutable field
-sed -i 's/serviceName: "nginx"/serviceName: "nginx-service"/' statefulset.yaml
-git add statefulset.yaml
-git commit -m "Modify immutable field"
-git push
+**UI option sync it**
+
 
 # Sync first, then modify immutable field
 sed -i 's/serviceName: "nginx"/serviceName: "nginx-service"/' statefulset.yaml
