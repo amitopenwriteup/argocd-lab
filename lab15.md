@@ -31,7 +31,7 @@ spec:
       # basename = directory name (e.g. app-frontend)
       name: '{{path.basename}}'
     spec:
-      project: stage-devseccops
+      project: default
       source:
         repoURL: https://github.com/amitopenwriteup/ArgoCD-ApplicationSet-Demo.git
         targetRevision: HEAD
