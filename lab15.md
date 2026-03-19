@@ -138,10 +138,6 @@ kubectl get applications -n argocd
 argocd app list --output wide
 ```
 
-### Check Namespaces
-
-```bash
-kubectl get namespaces | grep app-
 ```
 
 ---
