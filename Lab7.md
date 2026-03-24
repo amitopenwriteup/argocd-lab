@@ -40,7 +40,7 @@ Navigate to **Applications → + NEW APP** and fill in the following sections:
 | Field | Value |
 |-------|-------|
 | **Application Name** | `myhelm` |
-| **Project** | `myproj` |
+| **Project** | `default` |
 | **Sync Policy** | Automated |
 | **Auto-Create Namespace** | ✅ Enabled |
 
