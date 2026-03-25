@@ -27,7 +27,7 @@ Test **Prune Resources** and **Set Deletion Finalizer** to understand resource c
 | Field | Value |
 |-------|-------|
 | **Application Name** | `lab2-prune` |
-| **Project** | `myproj` |
+| **Project** | `default` |
 | **Sync Policy** | Automatic |
 
 **3.** Fill in **Source**:
