@@ -35,31 +35,6 @@ Make sure the following tools are installed and available on your local machine 
 
 ### Setup Docker
 
-```bash
-# Add Docker's official GPG key:
-sudo su
-sudo apt update
-sudo apt install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
-```
-```
-# Add the repository to Apt sources:
-sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
-Types: deb
-URIs: https://download.docker.com/linux/ubuntu
-Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
-Components: stable
-Signed-By: /etc/apt/keyrings/docker.asc
-EOF
-```
-
-```
-sudo apt update
-
-sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-```
 
 Kind (Kubernetes IN Docker) lets you run a full Kubernetes cluster inside Docker containers — perfect for local development and workshops.
 
@@ -85,7 +60,10 @@ sudo mv ./kind /usr/local/bin/kind
 ```
 
 ---
-
+### login as root
+```
+sudo su
+```
 ### 2.1 Create a Kind Cluster
 
 Run the commands below to spin up a single-node cluster named `argocd-workshop`:
