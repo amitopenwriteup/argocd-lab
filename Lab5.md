@@ -22,7 +22,7 @@
 | Field | Value |
 |-------|-------|
 | **Repository URL** | `https://github.com/<your-username>/nginx-argoproj.git` |
-| **Revision** | `main` (or `master` — match your default branch) |
+| **Revision** | `HEAD` 
 | **Path** | `nginx-conf` |
 
 **4.** Fill in **Destination**:
