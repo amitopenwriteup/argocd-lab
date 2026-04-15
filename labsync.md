@@ -62,7 +62,10 @@ go to git repo which you cloned
 
 ```
 cd argoappsynclab/lab3-sync-options/templates
-
+rm deployment-with-dependency.yaml
+git add .
+git commit -m "removed"
+git push
 ```
 
 ```bash
