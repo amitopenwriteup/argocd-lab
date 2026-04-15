@@ -36,7 +36,7 @@ Test **Prune Resources** and **Set Deletion Finalizer** to understand resource c
 |-------|-------|
 | **Repository URL** | `<YOUR_REPO_URL>` |
 | **Revision** | `HEAD` |
-| **Path** | `lab2-prune` |
+| **Path** | `lab1-autosync` |
 
 **4.** Fill in **Destination**:
 
