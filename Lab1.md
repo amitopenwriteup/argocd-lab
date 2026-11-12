@@ -1,187 +1,114 @@
-# ArgoCD Workshop Guide
-**Kind Cluster | kubectl | GitHub | GitOps**  
-*End-to-End Setup & Application Deployment*  
-*February 2026*
+# Lab 2: ArgoCD Setup
 
----
+*ArgoCD Workshop | kubectl | GitOps | February 2026*
 
-## Table of Contents
+**Goal:** Install ArgoCD on your Kind cluster, expose the UI, and log in as `admin`.
 
-1. [Prerequisites & Tools](#prerequisites--tools) — Page 2
-2. [Kind Cluster Setup](#kind-cluster-setup) — Page 2
-3. [Install ArgoCD](#install-argocd) — Page 3
-4. [Access ArgoCD Server & Password](#access-argocd-server--retrieve-password) — Page 3
+**Estimated time:** 15 minutes
 
----
+**Prerequisite:** Lab 1 completed. The `argocd-workshop` Kind cluster is running and your current context is `kind-argocd-workshop`.
 
-## 1. Prerequisites & Tools
-
-Make sure the following tools are installed and available on your local machine before starting the workshop.
-
-| Tool | Purpose | Install Reference |
-|------|---------|-------------------|
-| Docker | Container runtime for Kind | docker.com |
-| Kind | Kubernetes in Docker | kind.sigs.k8s.io |
-| kubectl | Kubernetes CLI | kubernetes.io/docs/tasks |
-| curl | Download & test endpoints | Pre-installed (Linux/Mac) |
-| Git | Clone / fork repositories | git-scm.com |
-| Browser | Access ArgoCD UI | Chrome / Firefox / Edge |
-
-> 💡 **Tip:** All commands in this guide are written for Linux / macOS terminals. Windows users should use WSL 2 or Git Bash.
-
----
-
-## 2. Kind Cluster Setup
-
-### Setup Docker
-
-
-Kind (Kubernetes IN Docker) lets you run a full Kubernetes cluster inside Docker containers — perfect for local development and workshops.
-
-### Install kubectl
+## 1. Confirm Your Cluster
 
 ```bash
-curl -LO https://dl.k8s.io/release/v1.35.0/bin/linux/amd64/kubectl
-sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-kubectl version
-```
-
-### Install Kind
-
-```bash
-# For AMD64 / x86_64
-[ $(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.31.0/kind-linux-amd64
-
-# For ARM64
-[ $(uname -m) = aarch64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.31.0/kind-linux-arm64
-
-chmod +x ./kind
-sudo mv ./kind /usr/local/bin/kind
-```
-
----
-### login as root
-```
-sudo su
-```
-### 2.1 Create a Kind Cluster
-
-Run the commands below to spin up a single-node cluster named `argocd-workshop`:
-
-```bash
-vi config.yaml
-```
-
-Copy and paste the following cluster configuration:
-
-```yaml
-# 4 node (3 workers) cluster config
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-  image: kindest/node:v1.30.0
-- role: worker
-  image: kindest/node:v1.30.0
-```
-
-Save the file, then run:
-
-```bash
-kind create cluster --config config.yaml
-```
-
----
-
-### 2.2 Verify the Cluster
-
-```bash
-kubectl cluster-info
+kubectl config current-context
 kubectl get nodes
 ```
 
----
+The context should be `kind-argocd-workshop` and all nodes should be `Ready`. If not, go back to Lab 1.
 
-### 2.3 Set the Correct Context
+## 2. Install ArgoCD
 
-```bash
-kubectl config get-contexts
-```
+ArgoCD is installed into its own dedicated namespace using the official manifest from the ArgoCD project.
 
----
-
-## 3. Install ArgoCD on the Cluster
-
-We install ArgoCD into its own dedicated namespace using the official manifest provided by the ArgoCD project.
-
-**1. Create the ArgoCD namespace:**
+### 2.1 Create the namespace
 
 ```bash
 kubectl create namespace argocd
 ```
 
-**2. Apply the ArgoCD install manifest:**
+### 2.2 Apply the install manifest
 
 ```bash
 kubectl apply -n argocd --server-side --force-conflicts \
   -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-**3. Wait for all pods to be Running:**
+### 2.3 Wait for all pods to be Running
 
 ```bash
 kubectl -n argocd get pods
 ```
 
-> ⏳ **Note:** It may take 2–3 minutes for all ArgoCD pods (`server`, `application-controller`, `repo-server`, `dex`, `redis`) to reach `Running` status. Do not proceed until all are Running.
+**Note:** It can take 2 to 3 minutes for all ArgoCD pods (`server`, `application-controller`, `repo-server`, `dex`, `redis`) to reach `Running`. Do not proceed until they are all Running. To watch progress, add `-w` and press Ctrl+C when done:
 
----
+```bash
+kubectl -n argocd get pods -w
+```
 
-## 4. Access ArgoCD Server & Retrieve Password
+## 3. Access the ArgoCD Server
 
-### 4.1 Port-Forward the ArgoCD Server
+### 3.1 Port-forward the ArgoCD server
 
-Since Kind uses a local cluster, we port-forward to expose the ArgoCD UI on your machine:
+Because Kind is a local cluster, port-forward the ArgoCD service to expose the UI on your machine:
 
 ```bash
 kubectl port-forward svc/argocd-server -n argocd 8080:443 \
   --address 0.0.0.0 > argocd-portforward.log 2>&1 &
 ```
 
-Leave this terminal open. Open a **new terminal** for remaining commands.
+The `&` runs it in the background. If you prefer to run it in the foreground, remove the `> ... &` part and leave that terminal open. Open a **new terminal** for the remaining commands.
 
----
+### 3.2 Open the ArgoCD UI
 
-### 4.2 Open the ArgoCD UI
-
-Get your machine's IP address:
+On the same machine, browse to `https://localhost:8080`. If you are connecting from another machine (for example a workshop VM), get the host IP first:
 
 ```bash
 hostname -i
 ```
 
-Open your browser and go to: `https://<your-ip>:8080`
+Then browse to `https://<your-ip>:8080`.
 
----
+Your browser will warn about a self-signed certificate. This is expected for a local lab. Choose **Advanced**, then **Proceed**.
 
-### 4.3 Retrieve the Initial Admin Password
+## 4. Retrieve the Admin Password
 
-ArgoCD auto-generates a password stored in a Kubernetes secret. Decode it with:
+ArgoCD generates an initial admin password and stores it in a Kubernetes secret. Decode it with:
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath='{.data.password}' | base64 -d
+  -o jsonpath='{.data.password}' | base64 -d; echo
 ```
 
-> 🔐 **Login Credentials**  
-> **Username:** `admin`  
-> **Password:** `<output of the command above>`  
-> Copy the decoded password before logging in.
+**Login credentials**
 
----
+- **Username:** `admin`
+- **Password:** the output of the command above (copy it before logging in)
 
-### 4.4 Log In
+## 5. Log In
 
-Enter `admin` as the username and paste the decoded password.
+Enter `admin` as the username, paste the decoded password, and click **Sign In**.
 
-**You are now inside the ArgoCD dashboard.** 🎉
+You are now inside the ArgoCD dashboard.
+
+## 6. Checkpoint
+
+- [ ] All pods in the `argocd` namespace are `Running`
+- [ ] The ArgoCD UI loads in your browser
+- [ ] You are logged in as `admin`
+
+## Troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| Pods stuck in `Pending` or `ContainerCreating` | Wait a few minutes, then check with `kubectl -n argocd describe pod <pod-name>` |
+| UI does not load | Check the port-forward is still running: `ps aux \| grep port-forward`. Restart it if needed |
+| Port 8080 already in use | Use another local port, for example `8081:443`, and browse to that port |
+| `argocd-initial-admin-secret` not found | The server may not be ready yet. Wait and retry |
+
+## Cleanup (end of workshop only)
+
+```bash
+pkill -f "port-forward svc/argocd-server"
+kubectl delete namespace argocd
+```
