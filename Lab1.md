@@ -1,4 +1,4 @@
-# Lab 2: ArgoCD Setup
+# Lab 1: ArgoCD Setup
 
 *ArgoCD Workshop | kubectl | GitOps | February 2026*
 
