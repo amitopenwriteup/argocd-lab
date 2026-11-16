@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: helm-application-amit
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - chart: nginx
+            releaseName: my-nginx
+            targetRevision: 22.4.3
+            syncWave: "1"
+            valuesFile: values/nginx-values.yaml
+          - chart: mariadb
+            releaseName: my-mysql
+            targetRevision: 25.0.1
+            syncWave: "2"
+            valuesFile: values/mariadb-values.yaml
+  template:
+    metadata:
+      name: '{{releaseName}}'
+      annotations:
+        argocd.argoproj.io/sync-wave: '{{syncWave}}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://charts.bitnami.com/bitnami
+          chart: '{{chart}}'
+          targetRevision: '{{targetRevision}}'
+          helm:
+            releaseName: '{{releaseName}}'
+            valueFiles:
+              - $values/{{valuesFile}}
+        - repoURL: https://github.com/amitopenwriteup/nginx-proj.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: amit-default
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
