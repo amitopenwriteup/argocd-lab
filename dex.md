@@ -34,8 +34,8 @@ Click **"New OAuth App"** and fill in:
 | Field | Value |
 |---|---|
 | **Application name** | `ArgoCD` (or any name) |
-| **Homepage URL** | `https://argocd.example.com` |
-| **Authorization callback URL** | `https://argocd.example.com/api/dex/callback` |
+| **Homepage URL** | `https://ip of your lb` |
+| **Authorization callback URL** | `https://ip of your lb/api/dex/callback` |
 
 > ⚠️ The callback URL **must** end with `/api/dex/callback` — this is what Dex listens on.
 
@@ -88,7 +88,7 @@ Add the following under `data:`:
 
 ```yaml
 data:
-  url: https://argocd.example.com   # Must match your ArgoCD URL
+  url: https://<argocd-server-svc-lb-ip>   # Must match your ArgoCD URL
 
   dex.config: |
     connectors:
@@ -96,39 +96,14 @@ data:
       id: github
       name: GitHub
       config:
-        clientID: Ov23liABC1234567890        # From GitHub OAuth App
+        clientID: Ov23liABC1234567890        # From GitHub OAuth client id replace it
         clientSecret: $dex.github.clientSecret  # References the K8s secret
-        redirectURI: https://argocd.example.com/api/dex/callback
-        orgs:
-        - name: your-github-org              # Restrict to your GitHub Org
+        redirectURI: https://<argocd-server-svc-lb-ip>/api/dex/callback
 ```
 
 > 💡 Remove the `orgs` block if you want to allow **any** GitHub user (not recommended for production).
 
 ---
-
-## Part 4: Configure RBAC
-
-Edit the `argocd-rbac-cm` ConfigMap to map GitHub teams/users to ArgoCD roles:
-
-```bash
-kubectl edit configmap argocd-rbac-cm -n argocd
-```
-
-```yaml
-data:
-  policy.default: role:readonly    # Default role for all authenticated users
-
-  policy.csv: |
-    # Map a GitHub Org team to ArgoCD admin role
-    g, your-github-org:platform-team, role:admin
-
-    # Map a specific GitHub user to admin
-    g, octocat, role:admin
-
-    # Map another team to readonly
-    g, your-github-org:dev-team, role:readonly
-```
 
 ---
 
